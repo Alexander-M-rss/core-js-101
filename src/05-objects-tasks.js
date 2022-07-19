@@ -20,8 +20,19 @@
  *    console.log(r.height);      // => 20
  *    console.log(r.getArea());   // => 200
  */
-function Rectangle(/* width, height */) {
-  throw new Error('Not implemented');
+function Rectangle(width, height) {
+  const res = {
+    width,
+    height,
+    getArea() {
+      return this.width * this.height;
+    },
+  };
+
+  res.width = width;
+  res.height = height;
+
+  return res;
 }
 
 
@@ -35,8 +46,8 @@ function Rectangle(/* width, height */) {
  *    [1,2,3]   =>  '[1,2,3]'
  *    { width: 10, height : 20 } => '{"height":10,"width":20}'
  */
-function getJSON(/* obj */) {
-  throw new Error('Not implemented');
+function getJSON(obj) {
+  return JSON.stringify(obj);
 }
 
 
@@ -51,8 +62,8 @@ function getJSON(/* obj */) {
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
  *
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function fromJSON(proto, json) {
+  return new proto.constructor(...Object.values(JSON.parse(json)));
 }
 
 
@@ -109,34 +120,121 @@ function fromJSON(/* proto, json */) {
  *
  *  For more examples see unit tests.
  */
+class CssSelectorChain {
+  constructor() {
+    this.selectors = [];
+    this.previosOrder = 0;
+    this.notRepeatable = new Set(null);
+  }
+
+  static throwMoreThenOneError() {
+    throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+  }
+
+  static throwOrderError() {
+    throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+  }
+
+  element(value) {
+    if (this.order === 1) CssSelectorChain.throwMoreThenOneError();
+    else if (this.order > 1) CssSelectorChain.throwOrderError();
+
+    this.selectors.push(value);
+    this.order = 1;
+    return this;
+  }
+
+  id(value) {
+    if (this.order === 2) CssSelectorChain.throwMoreThenOneError();
+    else if (this.order > 2) CssSelectorChain.throwOrderError();
+
+    this.selectors.push(`#${value}`);
+    this.order = 2;
+    return this;
+  }
+
+  class(value) {
+    if (this.order > 3) CssSelectorChain.throwOrderError();
+
+    this.selectors.push(`.${value}`);
+    this.order = 3;
+    return this;
+  }
+
+  attr(value) {
+    if (this.order > 4) CssSelectorChain.throwOrderError();
+
+    this.selectors.push(`[${value}]`);
+    this.order = 4;
+    return this;
+  }
+
+  pseudoClass(value) {
+    if (this.order > 5) CssSelectorChain.throwOrderError();
+
+    this.selectors.push(`:${value}`);
+    this.order = 5;
+    return this;
+  }
+
+  pseudoElement(value) {
+    if (this.order === 6) CssSelectorChain.throwMoreThenOneError();
+
+    this.selectors.push(`::${value}`);
+    this.order = 6;
+    return this;
+  }
+
+  combine(selector1, combinator, selector2) {
+    this.selectors = selector1.selectors.concat(` ${combinator} `).concat(selector2.selectors);
+    return this;
+  }
+
+  stringify() {
+    const chain = this.selectors.join('');
+
+    this.selectors = [];
+    this.order = 0;
+
+    return chain;
+  }
+}
+
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    const chain = new CssSelectorChain();
+    return chain.element(value);
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    const chain = new CssSelectorChain();
+    return chain.id(value);
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    const chain = new CssSelectorChain();
+    return chain.class(value);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    const chain = new CssSelectorChain();
+    return chain.attr(value);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    const chain = new CssSelectorChain();
+    return chain.pseudoClass(value);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    const chain = new CssSelectorChain();
+    return chain.pseudoElement(value);
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    const chain = new CssSelectorChain();
+    return chain.combine(selector1, combinator, selector2);
   },
 };
 
